@@ -1798,6 +1798,7 @@ function deleteRow($tr) {
       return;
     }
     $tr.remove();
+    syncSelectAll(); // in case this row was part of a checkbox selection, recompute the header state.
   });
 }
 
@@ -1846,6 +1847,7 @@ function deleteSelectedRows() {
       showErrorBanner("Deleted " + affected + " of " + $rows.length + " rows — some may have changed. Refresh to verify.");
     }
     $rows.remove();
+    syncSelectAll(); // header was indeterminate before delete; remaining rows are all unchecked now, so reset the box.
   });
 }
 

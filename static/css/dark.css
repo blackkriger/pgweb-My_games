@@ -172,6 +172,16 @@ body.dark .ace_marker-layer .ace_active-line { background: rgba(255, 255, 255, 0
 body.dark #input .input-wrapper,
 body.dark #input .input-wrapper #custom_query { background: var(--input-bg); }
 
+/* ace autocomplete popup — appended as .ace_editor.ace_autocomplete on body. Ace ships its own light defaults via JS-injected styles whose rules outweigh ours, so the popup container, scroller, selected line, the typed-prefix highlight and the right-aligned "keyword" label all need explicit dark overrides. */
+body.dark .ace_editor.ace_autocomplete { background: var(--panel) !important; color: var(--text) !important; border: 1px solid var(--border) !important; box-shadow: 0 6px 18px rgba(0, 0, 0, 0.6); }
+body.dark .ace_editor.ace_autocomplete .ace_scroller,
+body.dark .ace_editor.ace_autocomplete .ace_content { background: var(--panel) !important; }
+body.dark .ace_editor.ace_autocomplete .ace_line { color: var(--text) !important; }
+body.dark .ace_editor.ace_autocomplete .ace_completion-highlight { color: var(--accent-2) !important; text-shadow: none; }
+body.dark .ace_editor.ace_autocomplete .ace_rightAlignedText { color: var(--text-dim) !important; }
+body.dark .ace_editor.ace_autocomplete .ace_marker-layer .ace_line-hover,
+body.dark .ace_editor.ace_autocomplete .ace_marker-layer .ace_active-line { background: var(--panel-3) !important; border: 1px solid var(--border) !important; }
+
 /* editable query bar (Rows view) */
 body.dark #rows_query { background: var(--panel); border-bottom: 1px solid var(--border); }
 body.dark #rows_query_editor { background: var(--input-bg); border: 1px solid var(--border); }
