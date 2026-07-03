@@ -14,7 +14,7 @@ Originally forked for using within the [My_games](https://my-games.uk) project.
 - **Foreign-key navigation.** A "Go to *table.column*" item in the row context menu jumps straight to the referenced row.
 - **Copy Row as INSERT.** Right-click a row to copy a ready-to-run `INSERT` statement.
 - **Client-side row filtering.** A "Filter rows" box filters the current page locally.
-- **Precise query timing.** The Query page shows the real sub-millisecond server-side execution time, not a rounded one. 
+- **Precise query timing.** The Query page shows the real sub-millisecond server-side execution time. 
 - **Classic ↔ Office 98 themes.** Toggle between the classic look and a Windows-98–styled theme. Now with a sun/moon button, that toggles a dark, purple-tinted variant of the classic theme. 
 
 ## Usage
