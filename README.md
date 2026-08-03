@@ -8,14 +8,15 @@ Originally forked for using within the [My_games](https://my-games.uk) project.
 
 - **Inline cell editing in the table rows view.** Double-click a cell to edit its value in place — `Enter` saves, `Shift+Enter` inserts a newline, `Esc` cancels. Saving runs a primary-key–scoped, parameterized `UPDATE`, so only the exact row is touched and values are cast to their own column types.
 - Editing is available only while **browsing a table's rows** (not on arbitrary query results) and only for tables that have a **primary key**.
-- **Visual schema diagram (ER viewer).** Browse the schema as draggable table cards linked by their foreign keys, with pan, zoom and PK/FK markers. 
+- **Visual schema diagram (ER viewer).** Browse the schema as draggable table cards linked by their foreign keys, with pan, zoom and PK/FK markers. Cards show row counts and table size, columns are marked as index / unique / not-null / default / identity / generated, and the whole diagram exports to PNG or SVG in the current theme.
 - **Multi-row selection & bulk actions.** A select-all checkbox plus per-row checkboxes let you pick rows, then **delete the selection** or **export it** as CSV / JSON / XML from the toolbar's export-selected submenu.
 - **JSON(B) tree viewer/editor.** Expand, browse, and edit `json` / `jsonb` cell values as a collapsible tree.
 - **Foreign-key navigation.** A "Go to *table.column*" item in the row context menu jumps straight to the referenced row.
 - **Copy Row as INSERT.** Right-click a row to copy a ready-to-run `INSERT` statement.
 - **Client-side row filtering.** A "Filter rows" box filters the current page locally.
+- **Column filters with operators.** Filter a column by `=`, `!=`, `>`, `<`, `LIKE` and friends from the header menu; the condition survives paging and sorting.
 - **Precise query timing.** The Query page shows the real sub-millisecond server-side execution time. 
-- **Classic ↔ Office 98 themes.** Toggle between the classic look and a Windows-98–styled theme. Now with a sun/moon button, that toggles a dark, purple-tinted variant of the classic theme. 
+- **Dark theme.** The sun/moon button switches UI to a dark, purple-tinted look. There's also **Office 98** theme. 
 
 ## Usage
 
@@ -40,8 +41,8 @@ make build                                                  # current platform
 CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o pgweb .    # Linux server binary
 ```
 
-Prebuilt binaries are published on the [Releases](https://github.com/blackkriger/pgweb-My_games/releases) page. 
+Prebuilt binaries are published on the [Releases](https://github.com/blackkriger/pgweb-black/releases) page.
 
 ## License
 
-The MIT License (MIT). See [LICENSE](https://github.com/blackkriger/pgweb-My_games/blob/main/LICENSE) for details. Original work done by Dan Sosedoff and the pgweb contributors.
+The MIT License (MIT). See [LICENSE](https://github.com/blackkriger/pgweb-black/blob/main/LICENSE) for details. Original work done by Dan Sosedoff and the pgweb contributors.
