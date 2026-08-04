@@ -16,7 +16,7 @@ A fork of [sosedoff/pgweb](https://github.com/sosedoff/pgweb) — a simple, cros
 - **Client-side row filtering.** A "Filter rows" box filters the current page locally.
 - **Column filters with operators.** Filter a column by `=`, `!=`, `>`, `<`, `LIKE` and friends from the header menu; the condition survives paging and sorting.
 - **Precise query timing.** The Query page shows the real sub-millisecond server-side execution time. 
-- **Dark theme.** The sun/moon button next to Disconnect switches the UI to a dark, purple-tinted look. 
+- **Dark theme.** The sun/moon button switches the UI to a dark, purple-tinted look. 
 
 ## Usage
 
