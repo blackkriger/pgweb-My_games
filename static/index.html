@@ -8,7 +8,6 @@
   <link rel="stylesheet" href="static/css/bootstrap.css"></link>
   <link rel="stylesheet" href="static/css/font-awesome.css"></link>
   <link rel="stylesheet" href="static/css/app.css"></link>
-  <link rel="stylesheet" href="static/css/office98.css"></link>
   <link rel="stylesheet" href="static/css/dark.css"></link>
   <link rel="icon" type="image/x-icon" href="static/img/icon.ico" />
   <script type="text/javascript" src="static/js/jquery.js"></script>
@@ -23,7 +22,10 @@
   <script type="text/javascript" src="static/js/base64.js"></script>
 </head>
 <body>
-  <script>/* Set the theme body class synchronously before the page paints — avoids a Classic-theme flash for users whose saved theme is office98 or dark. applyTheme() in DOMReady reconciles the buttons and any later toggles. */(function(){try{var t=localStorage.getItem("pgweb_theme")||"classic";if(t==="office98"||t==="dark")document.body.classList.add(t);}catch(e){}})();</script>
+  <script>
+    /* Set the theme body class synchronously before the page paints — avoids a light flash for users whose saved theme is dark. applyTheme() in DOMReady reconciles the button and any later toggles. */
+    (function(){try{if((localStorage.getItem("pgweb_theme")||"classic")==="dark")document.body.classList.add("dark");}catch(e){}})();
+  </script>
   <div id="main">
     <div id="nav">
       <ul>
@@ -39,10 +41,9 @@
       </ul>
 
       <div class="connection-actions">
-        <a href="#" id="toggle_dark" class="btn btn-default btn-sm" title="Switch to dark" style="display: none"><i class="fa fa-moon-o"></i></a>
-        <a href="#" id="toggle_theme" class="btn btn-default btn-sm" title="Switch to Office 98">Theme</a>
         <a href="#" id="edit_connection" class="btn btn-default btn-sm"><i class="fa fa-database"></i> Connect</a>
         <a href="#" id="close_connection" class="btn btn-default btn-sm">Disconnect</a>
+        <a href="#" id="toggle_dark" class="btn btn-default btn-sm" title="Switch to dark"><i class="fa fa-moon-o"></i></a>
       </div>
     </div>
     <div id="sidebar">

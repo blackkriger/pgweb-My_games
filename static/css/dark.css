@@ -1,5 +1,5 @@
 /* ============================================================================
-   Dark theme — SEPARATE, OPTIONAL skin. Self-contained like office98.css so it can be dropped without touching app.css: delete this file, its <link> in index.html, and the "dark" entry in app.js ALL_THEMES + the sun/moon button.
+   Dark theme — SEPARATE, OPTIONAL skin. Self-contained so it can be dropped without touching app.css: delete this file, its <link> in index.html, and the "dark" entry in app.js ALL_THEMES + the sun/moon button.
    Opt-in via the `dark` class on <body>. Neutral charcoal surfaces with a muted violet accent (kept from the Classic palette) and the green Run-Query accent.
    ============================================================================ */
 body.dark {
@@ -41,15 +41,10 @@ body.dark #nav ul li#table_diagram.selected { background: var(--panel); }
 body.dark #nav ul li#table_history.selected { background: var(--row-odd); }
 body.dark #nav ul li.selected:before { background-color: inherit; }
 
-/* nav action buttons (Connect / Disconnect / theme toggles) — sit on the violet bar */
+/* nav action buttons (Connect / Disconnect / dark toggle) — sit on the violet bar */
 body.dark #toggle_dark,
-body.dark #toggle_theme,
 body.dark #edit_connection,
 body.dark #close_connection { background: rgba(0, 0, 0, 0.22); color: #fff; border: 1px solid rgba(255, 255, 255, 0.28); }
-body.dark #toggle_dark:hover,
-body.dark #toggle_theme:hover,
-body.dark #edit_connection:hover,
-body.dark #close_connection:hover { background: rgba(0, 0, 0, 0.42); border-color: rgba(255, 255, 255, 0.5); color: #fff; }
 
 /* sidebar */
 body.dark #sidebar { background: var(--panel); border-right: 1px solid var(--border); }
@@ -85,7 +80,7 @@ body.dark #input .actions .btn-primary:hover { color: var(--primary-2) !importan
 body.dark #input_resize_handler { background: var(--border); }
 
 /* pagination + filters */
-body.dark #pagination { background: var(--panel); border-bottom: 1px solid var(--border); }
+body.dark #pagination { background: var(--panel); border-bottom: 1px solid var(--border); box-shadow: none; }
 body.dark #pagination .filters span,
 body.dark #pagination .current-page,
 body.dark #pagination .rows-quickfilter { color: var(--text-2); }
@@ -181,6 +176,7 @@ body.dark .ace_editor.ace_autocomplete .ace_completion-highlight { color: var(--
 body.dark .ace_editor.ace_autocomplete .ace_rightAlignedText { color: var(--text-dim) !important; }
 body.dark .ace_editor.ace_autocomplete .ace_marker-layer .ace_line-hover,
 body.dark .ace_editor.ace_autocomplete .ace_marker-layer .ace_active-line { background: var(--panel-3) !important; border: 1px solid var(--border) !important; }
+body.dark .ace_autocomplete .ace_active-line { background: var(--panel-3) !important; }
 
 /* editable query bar (Rows view) */
 body.dark #rows_query { background: var(--panel); border-bottom: 1px solid var(--border); }
@@ -214,6 +210,10 @@ body.dark .diagram-edge-dot { fill: #9d93b8; }
 body.dark .diagram-edge--hot { stroke: var(--accent-2); }
 body.dark .diagram-edge-dot--hot { fill: var(--accent-2); }
 body.dark .diagram-status { background: var(--panel); color: var(--text); border: 1px solid var(--border); }
+
+/* copy-cell button floating over the results view */
+body.dark #results_view .copy { background: var(--panel-2); color: var(--text); border: 1px solid var(--border); }
+body.dark #results_view .copy:hover { border-color: var(--accent); color: #fff; }
 
 /* placeholders + scrollbars */
 body.dark input::placeholder,

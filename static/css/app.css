@@ -368,7 +368,7 @@
   box-shadow: 0;
 }
 
-/* Kill Bootstrap's dotted inset :focus ring on buttons app-wide. The Office 98 theme re-adds the intentional Win98 dotted focus cue via its own more-specific, later-loaded rules, so that cue shows only there. */
+/* Kill Bootstrap's dotted inset :focus ring on buttons app-wide. */
 .btn:focus,
 .btn:active:focus,
 .btn.active:focus { outline: none; }
@@ -633,7 +633,7 @@
   vertical-align: middle;
 }
 
-/* Context-menu fly-out submenu (Export Selected → CSV / JSON / XML). The format list opens to the right of its parent item on hover. Inherits the menu's own chrome (incl. the Office 98 bevels) since it's a .dropdown-menu too. */
+/* Context-menu fly-out submenu (Export Selected → CSV / JSON / XML). The format list opens to the right of its parent item on hover. Inherits the menu's own chrome since it's a .dropdown-menu too. */
 #results_row_menu .dropdown-submenu { position: relative; }
 #results_row_menu .dropdown-submenu > .dropdown-menu {
   display: none;
@@ -804,7 +804,7 @@
   display: none;
 }
 
-#edit_connection, #close_connection {
+#edit_connection, #close_connection, #toggle_dark {
   background: #79589f;
   color: #fff;
   border-color: #fff;
@@ -1010,7 +1010,7 @@
   position: absolute;
   top: 0; left: 0; right: 0;
   min-height: 40px;
-  /* No bottom padding: the editor sits flush with the bar's bottom edge so there's no strip of bar-background showing between it and the pagination below (was a visible grey seam in the Office 98 theme). */
+  /* No bottom padding: the editor sits flush with the bar's bottom edge so there's no strip of bar-background showing between it and the pagination below. */
   padding: 6px 10px 0;
   box-sizing: border-box;
   background: #fff;

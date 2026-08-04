@@ -1956,13 +1956,8 @@ function startCellEdit($div) {
   $editor.on("blur", function() { finish(true); });
 }
 
-// Theme model. The "Theme" button toggles the base look (Classic <-> Office 98).
-// "dark" is a separate Classic dark-variant, toggled by the sun/moon button to its
-// left — shown only on the Classic side, never on Office 98. Each non-default theme
-// is its own <body> class + opt-in CSS file; dropping one = remove its file, its
-// <link> in index.html and its entry here. Stored in localStorage; an unknown
-// stored value falls back to classic.
-var ALL_THEMES = ["classic", "office98", "dark"];   // every valid stored value
+// Theme model: the sun/moon button toggles Classic <-> Dark; "dark" is an opt-in skin (own body class + own CSS file) stored in localStorage, and an unknown stored value falls back to classic.
+var ALL_THEMES = ["classic", "dark"];   // every valid stored value
 
 function currentTheme() {
   var t = localStorage.getItem("pgweb_theme") || "classic";
@@ -1974,34 +1969,14 @@ function setTheme(t) {
   applyTheme();
 }
 
-// Remembered light/dark choice for the Classic family, so switching to Office 98 and
-// back restores whichever (light Classic or Dark) was active before.
-function classicIsDark() {
-  return localStorage.getItem("pgweb_classic_dark") === "1";
-}
-
 function applyTheme() {
-  var t = currentTheme();
-  $("body").removeClass("office98 dark");
-  if (t !== "classic") $("body").addClass(t);
+  var dark = currentTheme() === "dark";
+  $("body").toggleClass("dark", dark);
 
-  // Theme button shows the base look (dark counts as the Classic side); its tooltip
-  // names the look a click switches TO.
-  $("#toggle_theme")
-    .text(t === "office98" ? "Office 98" : "Classic")
-    .attr("title", t === "office98" ? "Switch to Classic" : "Switch to Office 98");
-
-  // Sun/moon button: only on the Classic side (hidden on Office 98). Moon while
-  // light (click -> dark), sun while dark (click -> light).
-  var $d = $("#toggle_dark");
-  if (t === "office98") {
-    $d.hide();
-  } else {
-    var dark = (t === "dark");
-    $d.show()
-      .attr("title", dark ? "Switch to light" : "Switch to dark")
-      .find("i").attr("class", dark ? "fa fa-sun-o" : "fa fa-moon-o");
-  }
+  // Moon while light (click -> dark), sun while dark (click -> light).
+  $("#toggle_dark")
+    .attr("title", dark ? "Switch to light" : "Switch to dark")
+    .find("i").attr("class", dark ? "fa fa-sun-o" : "fa fa-moon-o");
 }
 
 // ---- Schema diagram (visual ER viewer) ------------------------------------
@@ -2443,7 +2418,6 @@ function diagramXmlEsc(s) {
 function diagramExportPalette() {
   var cl = document.body.classList;
   if (cl.contains("dark")) return { bg: "#141318", card: "#1b1a21", head1: "#a98fd0", head2: "#735a9c", headHoriz: false, headText: "#ffffff", text: "#e7e6ec", type: "#7e7c8b", edge: "#6b6480", dot: "#9d93b8" };
-  if (cl.contains("office98")) return { bg: "#008080", card: "#c0c0c0", head1: "#000080", head2: "#1084d0", headHoriz: true, headText: "#ffffff", text: "#000000", type: "#404040", edge: "#ffffff", dot: "#ffffff" };
   return { bg: "#fafafa", card: "#ffffff", head1: "#8cc45c", head2: "#7eb54e", headHoriz: false, headText: "#ffffff", text: "#333333", type: "#aaaaaa", edge: "#b9b9b9", dot: "#8a8a8a" };
 }
 
@@ -2489,7 +2463,7 @@ function diagramExportSvg(fontB64) {
   }
   out.push('<rect x="0" y="0" width="' + W + '" height="' + H + '" fill="' + pal.bg + '"/>');
 
-  // Corner radius straight from the rendered card (0 on Office 98, 6 elsewhere) and a header gradient matching the theme (Office 98 is left→right navy, others top→bottom).
+  // Corner radius straight from the rendered card, and a header gradient matching the theme.
   var radius = cards[0] ? (parseFloat(getComputedStyle(cards[0]).borderTopLeftRadius) || 0) : 6;
   var gdir = pal.headHoriz ? 'x1="0" y1="0" x2="1" y2="0"' : 'x1="0" y1="0" x2="0" y2="1"';
   out.push('<defs><linearGradient id="dgHead" ' + gdir + '><stop offset="0" stop-color="' + pal.head1 + '"/><stop offset="1" stop-color="' + pal.head2 + '"/></linearGradient></defs>');
@@ -2525,7 +2499,7 @@ function diagramExportSvg(fontB64) {
     } else {
       out.push('<rect x="' + p.x + '" y="' + p.y + '" width="' + w + '" height="' + h + '" rx="' + radius + '" fill="' + pal.card + '" stroke="' + bcT + '"/>');
     }
-    // Header — rounded top corners when the theme uses them, square otherwise (Office 98).
+    // Header — rounded top corners when the theme uses them, square otherwise.
     if (radius > 0) {
       out.push('<path d="M ' + p.x + ' ' + (p.y + headH) + ' L ' + p.x + ' ' + (p.y + radius) + ' Q ' + p.x + ' ' + p.y + ' ' + (p.x + radius) + ' ' + p.y + ' L ' + (p.x + w - radius) + ' ' + p.y + ' Q ' + (p.x + w) + ' ' + p.y + ' ' + (p.x + w) + ' ' + (p.y + radius) + ' L ' + (p.x + w) + ' ' + (p.y + headH) + ' Z" fill="url(#dgHead)"/>');
     } else {
@@ -2913,23 +2887,9 @@ $(document).ready(function() {
   bindContentModalEvents();
 
   applyTheme();
-  $("#toggle_theme").on("click", function(e) {
-    e.preventDefault();
-    if (currentTheme() === "office98") {
-      // Back to the Classic family, restoring its remembered light/dark mode.
-      setTheme(classicIsDark() ? "dark" : "classic");
-    } else {
-      // Classic or Dark -> Office 98. Remember the current light/dark choice first.
-      localStorage.setItem("pgweb_classic_dark", currentTheme() === "dark" ? "1" : "0");
-      setTheme("office98");
-    }
-  });
-
   $("#toggle_dark").on("click", function(e) {
     e.preventDefault();
-    var goDark = currentTheme() !== "dark";
-    localStorage.setItem("pgweb_classic_dark", goDark ? "1" : "0");
-    setTheme(goDark ? "dark" : "classic");
+    setTheme(currentTheme() === "dark" ? "classic" : "dark");
   });
 
   $("#rows_query_run").on("click", runRowsQuery);

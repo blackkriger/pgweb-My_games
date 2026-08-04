@@ -2,7 +2,7 @@
 
 A fork of [sosedoff/pgweb](https://github.com/sosedoff/pgweb) — a simple, cross-platform, web-based PostgreSQL database explorer — with **inline cell editing** and a set of data-browsing conveniences added on top. 
 
-Originally forked for using within the [My_games](https://my-games.uk) project. 
+<sub>Originally forked for use within the [My_games](https://my-games.uk) project.</sub>
 
 ## What this fork adds
 
@@ -16,7 +16,7 @@ Originally forked for using within the [My_games](https://my-games.uk) project.
 - **Client-side row filtering.** A "Filter rows" box filters the current page locally.
 - **Column filters with operators.** Filter a column by `=`, `!=`, `>`, `<`, `LIKE` and friends from the header menu; the condition survives paging and sorting.
 - **Precise query timing.** The Query page shows the real sub-millisecond server-side execution time. 
-- **Dark theme.** The sun/moon button switches UI to a dark, purple-tinted look. There's also **Office 98** theme. 
+- **Dark theme.** The sun/moon button next to Disconnect switches the UI to a dark, purple-tinted look. 
 
 ## Usage
 
