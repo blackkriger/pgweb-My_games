@@ -50,7 +50,10 @@ type Client struct {
 
 func getSchemaAndTable(str string) (string, string) {
 	parts := splitQualifiedName(str)
-	if len(parts) == 1 {
+	switch len(parts) {
+	case 0: // a name that is only quotes parses to nothing; don't index past the end
+		return "public", ""
+	case 1:
 		return "public", parts[0]
 	}
 	return parts[0], parts[1]
@@ -332,7 +335,7 @@ func (client *Client) Function(id string) (*Result, error) {
 
 func (client *Client) TableRows(table string, opts RowsOptions) (*Result, error) {
 	schema, table := getSchemaAndTable(table)
-	sql := fmt.Sprintf(`SELECT * FROM "%s"."%s"`, schema, table)
+	sql := fmt.Sprintf(`SELECT * FROM %s.%s`, pgQuoteIdent(schema), pgQuoteIdent(table))
 
 	if opts.Where != "" {
 		sql += fmt.Sprintf(" WHERE %s", opts.Where)
@@ -384,7 +387,7 @@ func (client *Client) TableRowsCount(table string, opts RowsOptions) (*Result, e
 	}
 
 	schema, tableName := getSchemaAndTable(table)
-	sql := fmt.Sprintf(`SELECT COUNT(1) FROM "%s"."%s"`, schema, tableName)
+	sql := fmt.Sprintf(`SELECT COUNT(1) FROM %s.%s`, pgQuoteIdent(schema), pgQuoteIdent(tableName))
 
 	if opts.Where != "" {
 		sql += fmt.Sprintf(" WHERE %s", opts.Where)
@@ -398,7 +401,7 @@ func (client *Client) TableInfo(table string) (*Result, error) {
 		return client.query(statements.TableInfoCockroach)
 	}
 	schema, table := getSchemaAndTable(table)
-	return client.query(statements.TableInfo, fmt.Sprintf(`"%s"."%s"`, schema, table))
+	return client.query(statements.TableInfo, fmt.Sprintf(`%s.%s`, pgQuoteIdent(schema), pgQuoteIdent(table)))
 }
 
 func (client *Client) TableIndexes(table string) (*Result, error) {
