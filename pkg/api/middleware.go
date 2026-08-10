@@ -69,17 +69,20 @@ func requireLocalQueries() gin.HandlerFunc {
 	}
 }
 
-// requireSameOrigin blocks mutating requests whose Origin/Referer doesn't match the server host so a malicious page in another tab can't trigger UPDATE/DELETE against a pgweb pinned to localhost. Non-browser clients (curl, scripts) send neither header — they pass. An explicit --cors-origin overrides the check for that origin.
+// requireSameOrigin blocks mutating requests whose Origin/Referer doesn't match the server host so a malicious page in another tab can't trigger UPDATE/DELETE against a pgweb pinned to localhost. Non-browser clients (curl, scripts) send neither header — they pass. --cors-origin only widens this when CORS is explicitly enabled, and never through the "*" default: that option says who may read a response, not who may write.
 func requireSameOrigin() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		host := c.Request.Host
-		allowed := command.Opts.CorsOrigin
+		allowed := ""
+		if command.Opts.Cors && command.Opts.CorsOrigin != "*" {
+			allowed = command.Opts.CorsOrigin
+		}
 		if origin := c.GetHeader("Origin"); origin != "" {
 			if u, err := neturl.Parse(origin); err == nil && u.Host == host {
 				c.Next()
 				return
 			}
-			if allowed == "*" || (allowed != "" && origin == allowed) {
+			if allowed != "" && origin == allowed {
 				c.Next()
 				return
 			}
