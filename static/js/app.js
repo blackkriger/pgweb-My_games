@@ -215,6 +215,9 @@ function loadLocalQueries() {
 
 function loadSchemas() {
   $("#objects").html("");
+  // these are keyed by table name alone, so a reconnect to another database must drop them
+  fkCache = {};
+  colTypeCache = {};
 
   var emptyObjectList = function() {
     return {
@@ -320,13 +323,16 @@ function resetTable() {
 }
 
 // Cache the lowercased concatenated cell text on each tr so applyQuickFilter doesn't walk the DOM and re-lowercase on every keystroke. Called once per buildTable.
+function refreshQuickFilterRow(tr) {
+  if (!tr) return;
+  var txt = "";
+  var cells = tr.querySelectorAll("td[data-name]");
+  for (var i = 0; i < cells.length; i++) txt += cells[i].textContent + "\n";
+  tr._qfText = txt.toLowerCase();
+}
+
 function indexRowsForQuickFilter() {
-  $("#results_body tr").each(function() {
-    var txt = "";
-    var cells = this.querySelectorAll("td[data-name]");
-    for (var i = 0; i < cells.length; i++) txt += cells[i].textContent + "\n";
-    this._qfText = txt.toLowerCase();
-  });
+  $("#results_body tr").each(function() { refreshQuickFilterRow(this); });
 }
 
 // Client-side quick filter: hide rows on the current page whose cached row text doesn't contain the typed substring (case-insensitive). Pure DOM, no server round-trip — complements the SQL query bar.
@@ -1733,6 +1739,7 @@ function renderCellValue($div, value) {
   } else {
     $div.text(value);
   }
+  refreshQuickFilterRow($div.closest("tr")[0]); // the row's filter text changed with it
 }
 
 // Full original row as a column -> value map, used by the backend to locate the row by its primary key.
@@ -1813,11 +1820,17 @@ function clearRowSelection() {
 }
 
 // Keep the header "select all" box reflecting the page: checked when every row is ticked, indeterminate while only some are, unchecked when none. Highlight follows automatically via the tr:has(:checked) CSS rule.
+// Only rows the quick filter left visible take part in selection: ticking "all" must never
+// pick up rows the user cannot see and is about to delete.
+function selectableBoxes() {
+  return $("#results_body tr:visible input.row-select-box");
+}
+
 function syncSelectAll() {
   var $all = $("#results_header input.row-select-all");
   if (!$all.length) return;
-  var total   = $("#results_body input.row-select-box").length;
-  var checked = $("#results_body input.row-select-box:checked").length;
+  var total   = selectableBoxes().length;
+  var checked = selectableBoxes().filter(":checked").length;
   $all.prop("checked", total > 0 && checked === total);
   $all.prop("indeterminate", checked > 0 && checked < total);
 }
@@ -1843,7 +1856,10 @@ function deleteSelectedRows() {
       return;
     }
     if (affected < $rows.length) {
-      showErrorBanner("Deleted " + affected + " of " + $rows.length + " rows — some may have changed. Refresh to verify.");
+      // some of them are still there, and guessing which would hide real rows
+      showErrorBanner("Deleted " + affected + " of " + $rows.length + " rows — reloading to show what is left.");
+      showTableContent();
+      return;
     }
     $rows.remove();
     syncSelectAll(); // header was indeterminate before delete; remaining rows are all unchecked now, so reset the box.
@@ -1861,9 +1877,10 @@ function exportSelectedRows(format) {
   var payload = [];
   $rows.each(function() { payload.push(collectRowValues($(this))); });
 
+  // a form submission cannot set the session header, so the id goes in the query string
   var $form = $("<form>", {
     method: "POST",
-    action: "api/tables/" + $("#results").data("table") + "/export_rows?format=" + format,
+    action: generateURL("api/tables/" + $("#results").data("table") + "/export_rows", { format: format }),
     target: "_blank"
   });
   $("<input>", { type: "hidden", name: "rows", value: JSON.stringify(payload) }).appendTo($form);
@@ -1884,7 +1901,10 @@ function startCellEdit($div) {
   var original  = cellValue($div);
   var rowValues = collectRowValues($td.closest("tr"));
   // JSON/JSONB cells open pretty-printed for readable multi-line editing.
-  var jsonVal   = original === null ? undefined : parseJsonValue(original);
+  // the column's own type decides, not the text: a varchar holding {"a":1} is still text,
+  // and re-serialising it would silently drop its whitespace
+  var colType   = (colTypeCache[$("#results").data("table")] || {})[column] || "";
+  var jsonVal   = (original === null || colType.indexOf("json") < 0) ? undefined : parseJsonValue(original);
   var isJson    = jsonVal !== undefined;
   var text      = original === null ? "" : (isJson ? JSON.stringify(jsonVal, null, 2) : original);
 
@@ -1926,10 +1946,11 @@ function startCellEdit($div) {
         $editor.focus();
         return;
       }
-      var canonical = JSON.stringify(parsed);
-      if (canonical === JSON.stringify(jsonVal)) { settled = true; renderCellValue($div, original); return; }
+      // send what was typed, not a re-serialisation: JSON.stringify would round numbers
+      // past 2^53 and rewrite anything it cannot represent
+      if (JSON.stringify(parsed) === JSON.stringify(jsonVal)) { settled = true; renderCellValue($div, original); return; }
       settled = true;
-      saveCellValue($div, column, canonical, false, rowValues, original);
+      saveCellValue($div, column, next, false, rowValues, original);
       return;
     }
 
@@ -2844,9 +2865,9 @@ function bindContentModalEvents() {
   // calling preventDefault here would trigger the checkbox "canceled activation"
   // revert, which clobbers syncSelectAll and leaves the box stuck in "−".
   $("#results_header").on("click", "input.row-select-all", function() {
-    var on = $("#results_body input.row-select-box:checked").length === 0;
-    $("#results_body input.row-select-box").prop("checked", on);
-    $("#results_body input.row-select-box").closest("tr").toggleClass("row-checked", on);
+    var on = selectableBoxes().filter(":checked").length === 0;
+    selectableBoxes().prop("checked", on);
+    selectableBoxes().closest("tr").toggleClass("row-checked", on);
     syncSelectAll();
   });
   // Per-row tick: keep the row highlight + the header box in sync.
@@ -2857,7 +2878,7 @@ function bindContentModalEvents() {
 
   // Shift+click ticks every checkbox between the last-clicked one and this one (all set to checked). A plain click just moves the anchor.
   $("#results_body").on("click", "input.row-select-box", function(e) {
-    var boxes = $("#results_body input.row-select-box").toArray();
+    var boxes = selectableBoxes().toArray();
     var idx = boxes.indexOf(this);
     if (e.shiftKey && rowSelectAnchor != null && rowSelectAnchor < boxes.length && rowSelectAnchor !== idx) {
       var lo = Math.min(rowSelectAnchor, idx), hi = Math.max(rowSelectAnchor, idx);
