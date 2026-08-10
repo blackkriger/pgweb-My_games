@@ -754,9 +754,8 @@ function runRowsQuery() {
   $("#body").removeClass("with-pagination");
   executeQuery(sql, function(data) {
     buildTable(data, null, null, { selectable: true });
-    $("#results").data("mode", "browse").data("table", table);
-    fetchFkMap(table, $.noop);
-    fetchColTypes(table);
+    // these rows may come from any table, so editing them would write to the wrong one
+    $("#results").data("mode", "query").removeData("table");
   });
 }
 
@@ -766,7 +765,7 @@ function showPaginatedTableContent() {
   var sortOrder = null;
 
   if (activeColumn.length) {
-    sortColumn = activeColumn.data("name");
+    sortColumn = activeColumn.attr("data-name");
     sortOrder = activeColumn.data("order");
   }
 
@@ -1342,7 +1341,7 @@ var lastMenuTd = null;
 function applyRowFilter(op) {
   if ($("#results").data("mode") != "browse" || !rowsEditor || !lastMenuTd || !lastMenuTd.length) return;
   var $td = lastMenuTd;
-  var colName = $td.data("name");
+  var colName = $td.attr("data-name");
   if (colName == null) return;
   var $div = $td.children("div");
   var isNull = !!$div.children("span.null").length;
@@ -1387,13 +1386,13 @@ function bindTableHeaderMenu() {
 
       switch(menuItem.data("action")) {
         case "copy_name":
-          copyToClipboard($(context).data("name"));
+          copyToClipboard($(context).attr("data-name"));
           break;
 
         case "unique_values":
           showUniqueColumnsValues(
             $("#results").data("table"), // table name
-            $(context).data("name"),     // column name
+            $(context).attr("data-name"),     // column name
             menuItem.data("counts")      // display counts
           );
           break;
@@ -1401,7 +1400,7 @@ function bindTableHeaderMenu() {
         case "num_stats":
           showFieldNumStats(
             $("#results").data("table"), // table name
-            $(context).data("name")      // column name
+            $(context).attr("data-name")      // column name
           );
           break;
       }
@@ -1441,7 +1440,7 @@ function bindTableHeaderMenu() {
       var fk = null, fkVal = null;
       if (editable) {
         var $td = lastMenuTd;
-        var col = $td.data("name");
+        var col = $td.attr("data-name");
         var map = fkCache[$("#results").data("table")] || {};
         var $div = $td.children("div");
         if (col && map[col] && !$div.children("span.null").length) {
@@ -1546,7 +1545,7 @@ function resetObjectsFilter() {
 function filterObjectsByName(query) {
   $("#objects li.schema-item").each(function (idx, el) {
     var item = $(el);
-    var name = $(el).data("name");
+    var name = $(el).attr("data-name");
 
     if (name.indexOf(query) < 0) {
       item.hide();
@@ -1740,7 +1739,7 @@ function renderCellValue($div, value) {
 function collectRowValues($tr) {
   var values = {};
   $tr.children("td[data-col]").each(function() {
-    var name = $(this).data("name");
+    var name = $(this).attr("data-name");
     if (name != null) values[name] = cellValue($(this).children("div"));
   });
   return values;
@@ -1776,7 +1775,7 @@ function setCellNull($div) {
   if ($("#results").data("mode") != "browse") return;
 
   var $td = $div.parent();
-  var column = $td.data("name");
+  var column = $td.attr("data-name");
   if (column == null || cellValue($div) === null) return;
 
   saveCellValue($div, column, "", true, collectRowValues($td.closest("tr")), cellValue($div));
@@ -1879,7 +1878,7 @@ function startCellEdit($div) {
   if ($div.children("textarea").length) return;
 
   var $td = $div.parent();
-  var column = $td.data("name");
+  var column = $td.attr("data-name");
   if (column == null) return;
 
   var original  = cellValue($div);
@@ -2718,7 +2717,7 @@ function fetchColTypes(table, cb) {
 // Open the FK target table filtered to the referenced row ("col" = value).
 function openFkTarget(targetTable, targetColumn, value) {
   var $li = $("#objects li.schema-item").filter(function() {
-    return $(this).data("id") === targetTable || $(this).data("name") === targetTable;
+    return $(this).data("id") === targetTable || $(this).attr("data-name") === targetTable;
   }).first();
   if (!$li.length) { showErrorBanner("Table '" + targetTable + "' not found in the sidebar"); return; }
 
@@ -2772,7 +2771,7 @@ function copyRowAsInsert($tr) {
   var types = colTypeCache[table] || {};
   var cols = [], vals = [];
   $tr.children("td[data-name]").each(function() {
-    var name = $(this).data("name");
+    var name = $(this).attr("data-name");
     if (name == null) return;
     var v = cellValue($(this).children("div"));
     cols.push(quoteIdent(name));
@@ -3119,9 +3118,9 @@ $(document).ready(function() {
     // Non-data headers (the select-all checkbox column, the action column) have
     // no column name — clicking them must NOT trigger a sort + table re-render
     // (that was wiping the select-all selection the instant it was made).
-    if (!$(this).data("name")) return;
+    if (!$(this).attr("data-name")) return;
 
-    var sortColumn = $(this).data("name");
+    var sortColumn = $(this).attr("data-name");
     var sortOrder  = $(this).data("order") === "ASC" ? "DESC" : "ASC";
 
     $(this).data("order", sortOrder);
