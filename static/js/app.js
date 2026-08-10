@@ -6,6 +6,7 @@ var bookmarks           = {};
 var default_rows_limit  = 100;
 var currentObject       = null;
 var autocompleteObjects = [];
+var tableIdByName      = {};
 var inputResizing       = false;
 var inputResizeOffset   = null;
 
@@ -260,6 +261,7 @@ function loadSchemas() {
 
       // Clear out all autocomplete objects
       autocompleteObjects = [];
+      tableIdByName = {};
       for (schema in data) {
         for (kind in data[schema]) {
           if (!(kind == "table" || kind == "view" || kind == "materialized_view" || kind == "function")) {
@@ -267,11 +269,18 @@ function loadSchemas() {
           }
 
           for (item in data[schema][kind]) {
+            var objectName = data[schema][kind][item].name;
             autocompleteObjects.push({
-              caption: data[schema][kind][item].name,
-              value: data[schema][kind][item].name,
+              caption: objectName,
+              value: objectName,
               meta: kind
             });
+            // built here so a keystroke resolves a name from a map instead of walking the sidebar
+            if (kind != "function") {
+              var objectId = schema + "." + objectName;
+              tableIdByName[objectId] = objectId;
+              if (!tableIdByName[objectName]) tableIdByName[objectName] = objectId;
+            }
           }
         }
       }
@@ -1122,9 +1131,54 @@ function showFieldNumStats(table, column) {
 
 var rowsEditor = null;
 
+// Table names the statement mentions, so columns can be suggested for those tables only.
+// Deliberately shallow: FROM/JOIN/UPDATE/INTO followed by a (optionally quoted, optionally
+// schema-qualified) name. Aliases and CTEs are out of scope.
+var tableRefPattern = /\b(?:from|join|update|into)\s+("[^"]*"|[A-Za-z_][\w$]*)(?:\.("[^"]*"|[A-Za-z_][\w$]*))?/gi;
+
+function tablesInQuery(sql) {
+  var names = [], m;
+  tableRefPattern.lastIndex = 0;
+  while ((m = tableRefPattern.exec(sql)) !== null) {
+    var parts = [m[1], m[2]].filter(Boolean).map(function(p) { return p.replace(/^"|"$/g, ""); });
+    names.push(parts.join("."));
+  }
+  return names;
+}
+
+// Resolve a name as written into the "schema.table" id the sidebar and the API use.
+function resolveTableId(name) {
+  return name ? (tableIdByName[name] || null) : null;
+}
+
+// Columns of the tables in scope, ranked above the editor's built-in keyword list. A table
+// whose columns are not cached yet is fetched here and shows up on the next keystroke.
+function columnCompletions(editor, session) {
+  var names = tablesInQuery(session.getValue());
+  if (editor === rowsEditor) names.unshift($("#results").data("table"));
+
+  var out = [], seenTable = {}, seenColumn = {};
+  names.forEach(function(name) {
+    var id = resolveTableId(name);
+    if (!id || seenTable[id]) return;
+    seenTable[id] = true;
+
+    var cols = colTypeCache[id];
+    if (!cols) { fetchColTypes(id); return; }
+
+    Object.keys(cols).forEach(function(col) {
+      var meta = cols[col] || "column";
+      if (seenColumn[col + " " + meta]) return; // same column and type in two joined tables
+      seenColumn[col + " " + meta] = true;
+      out.push({ caption: col, value: col, meta: meta, score: 1000 });
+    });
+  });
+  return out;
+}
+
 var objectAutocompleter = {
   getCompletions: function (editor, session, pos, prefix, callback) {
-    callback(null, autocompleteObjects);
+    callback(null, columnCompletions(editor, session).concat(autocompleteObjects));
   }
 }
 
@@ -2726,10 +2780,16 @@ function parseColTypes(data) {
   return map;
 }
 
+var colTypeFetching = {};
+
 function fetchColTypes(table, cb) {
   cb = cb || $.noop;
   if (colTypeCache[table]) { cb(colTypeCache[table]); return; }
+  // autocompletion asks on every keystroke, so one request per table has to be enough
+  if (colTypeFetching[table]) return;
+  colTypeFetching[table] = true;
   getTableStructure(table, { type: "table" }, function(data) {
+    delete colTypeFetching[table];
     colTypeCache[table] = (data && !data.error) ? parseColTypes(data) : {};
     cb(colTypeCache[table]);
   });
