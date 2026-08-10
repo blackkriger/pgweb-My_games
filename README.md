@@ -20,11 +20,16 @@ A fork of [sosedoff/pgweb](https://github.com/sosedoff/pgweb) — a simple, cros
 
 ## Installation
 
-Grab a binary from the [Releases](https://github.com/blackkriger/pgweb-black/releases) page, or run it in Docker:
+Grab a binary from the [Releases](https://github.com/blackkriger/pgweb-black/releases) page, or run the published image — no clone, no toolchain:
+
+```
+docker run --rm -p 8081:8081 ghcr.io/blackkriger/pgweb-black --url postgres://user:password@host:5432/database
+```
+
+Images are built for `linux/amd64` and `linux/arm64` on every release tag. To build one yourself instead:
 
 ```
 docker build -t pgweb-black .
-docker run --rm -p 8081:8081 pgweb-black --url postgres://user:password@host:5432/database
 ```
 
 The image runs as an unprivileged user, ships `pg_dump` so table exports work, and answers a healthcheck on `/api/info`. The entrypoint already binds `0.0.0.0:8081`, so anything you pass is appended as extra flags. Reaching a database on the host machine needs `--network host` (Linux) or `host.docker.internal` as the host name.
