@@ -5,7 +5,7 @@ SELECT
   COALESCE(bool_or(con.contype = 'p'), false) AS is_primary,
   COALESCE(bool_or(con.contype = 'f'), false) AS is_foreign,
   COALESCE(bool_or(ix.indexrelid IS NOT NULL), false) AS is_indexed,
-  COALESCE(bool_or(ix.indisunique), false) AS is_unique,
+  COALESCE(bool_or(ix.indisunique AND ix.indnkeyatts = 1), false) AS is_unique,
   a.attnotnull AS is_not_null,
   (a.attidentity <> '') AS is_identity,
   (a.attgenerated <> '') AS is_generated,
@@ -22,7 +22,7 @@ LEFT JOIN
                    AND con.contype IN ('p', 'f')
 LEFT JOIN
   pg_index ix ON ix.indrelid = c.oid
-             AND a.attnum = ANY(ix.indkey)
+             AND a.attnum = ANY(ix.indkey[0:ix.indnkeyatts - 1])
 LEFT JOIN
   pg_attrdef ad ON ad.adrelid = c.oid
                AND ad.adnum = a.attnum
