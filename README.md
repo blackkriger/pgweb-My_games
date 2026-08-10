@@ -20,7 +20,7 @@ A fork of [sosedoff/pgweb](https://github.com/sosedoff/pgweb) — a simple, cros
 
 ## Installation
 
-Grab a binary from the [Releases](https://github.com/blackkriger/pgweb-black/releases) page, or run the published image — no clone, no toolchain:
+Grab a binary from the [Releases](https://github.com/blackkriger/pgweb-black/releases) page, or run the published image:
 
 ```
 docker run --rm -p 8081:8081 ghcr.io/blackkriger/pgweb-black --url postgres://user:password@host:5432/database
@@ -40,7 +40,7 @@ Bookmarks, saved queries, `~/.pgpass` and the default SSH key are read from the 
 docker run --rm -p 8081:8081 -v "$(pwd)/bookmarks:/home/pgweb/.pgweb/bookmarks:ro" pgweb-black
 ```
 
-Nothing is ever written to disk at runtime — dumps stream straight to the response — so the container also runs with a read-only root filesystem:
+Nothing is written to disk at runtime(dumps stream straight to the response), so the container also runs with a read-only root filesystem:
 
 ```
 docker run --rm -p 8081:8081 --read-only pgweb-black --url postgres://...

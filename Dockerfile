@@ -8,8 +8,7 @@ ARG TARGETOS
 ARG TARGETARCH
 ARG CGO_ENABLED=0
 
-# The Makefile only shells out to git when these are unset, so passing them keeps
-# the repository history out of the build context entirely.
+# make only shells out to git when these are unset, so the history stays out of the build
 ARG GIT_COMMIT=unknown
 ARG BUILD_TIME
 
@@ -30,8 +29,7 @@ RUN --mount=type=cache,target=/go/pkg/mod --mount=type=cache,target=/root/.cache
 # Fetch signing key
 # ------------------------------------------------------------------------------
 FROM debian:trixie-slim AS keyring
-# Pinned: this key is what authorises the apt repository the client comes from. If PostgreSQL
-# ever rotates it the build fails here, which is the point — it must not change unnoticed.
+# this key authorises the apt repo, so a change to it must break the build, not slip through
 ADD --checksum=sha256:0144068502a1eddd2a0280ede10ef607d1ec592ce819940991203941564e8e76 \
     https://www.postgresql.org/media/keys/ACCC4CF8.asc keyring.asc
 RUN apt-get update && \
@@ -61,8 +59,7 @@ RUN . /etc/os-release && \
 
 COPY --from=build /build/pgweb /usr/bin/pgweb
 
-# A home directory is not optional: bookmarks, saved queries, ~/.pgpass and the default SSH
-# key all resolve under $HOME, so without one those features are silently unavailable.
+# bookmarks, saved queries, ~/.pgpass and the default SSH key all resolve under $HOME
 RUN useradd --uid 1000 --create-home --shell /bin/false pgweb && \
     mkdir -p /home/pgweb/.pgweb/bookmarks /home/pgweb/.pgweb/queries && \
     chown -R pgweb:pgweb /home/pgweb
