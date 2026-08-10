@@ -1,7 +1,8 @@
-.git
-.github
-bin/
-./pgweb
-pgweb
-*.tar.gz
-*.zip
+# everything is excluded, then only what the Dockerfile copies is let back in
+*
+!go.mod
+!go.sum
+!Makefile
+!main.go
+!static/
+!pkg/
