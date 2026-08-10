@@ -222,3 +222,10 @@ body.dark ::-webkit-scrollbar { width: 12px; height: 12px; }
 body.dark ::-webkit-scrollbar-track { background: var(--bg); }
 body.dark ::-webkit-scrollbar-thumb { background: var(--panel-3); border-radius: 6px; border: 3px solid var(--bg); }
 body.dark ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+
+/* Bootstrap's light <pre> is used by "View Definition" and would sit as a bright slab */
+body.dark #results_view pre { background: var(--panel-2); color: var(--text); border-color: var(--border); }
+
+/* ace paints the selection in its marker layer, which the light tomorrow theme leaves grey */
+body.dark .ace_marker-layer .ace_selection { background: var(--sel); }
+body.dark .ace_marker-layer .ace_selected-word { background: var(--sel); border: 0; }
