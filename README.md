@@ -18,6 +18,37 @@ A fork of [sosedoff/pgweb](https://github.com/sosedoff/pgweb) — a simple, cros
 - **Precise query timing.** The Query page shows the real sub-millisecond server-side execution time. 
 - **Dark theme.** The sun/moon button switches the UI to a dark, purple-tinted look. 
 
+## Installation
+
+Grab a binary from the [Releases](https://github.com/blackkriger/pgweb-black/releases) page, or run it in Docker:
+
+```
+docker build -t pgweb-black .
+docker run --rm -p 8081:8081 pgweb-black --url postgres://user:password@host:5432/database
+```
+
+The image runs as an unprivileged user, ships `pg_dump` so table exports work, and answers a healthcheck on `/api/info`. The entrypoint already binds `0.0.0.0:8081`, so anything you pass is appended as extra flags. Reaching a database on the host machine needs `--network host` (Linux) or `host.docker.internal` as the host name.
+
+Bookmarks, saved queries, `~/.pgpass` and the default SSH key are read from the `pgweb` user's home, so mount them to use those features:
+
+```
+docker run --rm -p 8081:8081 -v "$(pwd)/bookmarks:/home/pgweb/.pgweb/bookmarks:ro" pgweb-black
+```
+
+Nothing is ever written to disk at runtime — dumps stream straight to the response — so the container also runs with a read-only root filesystem:
+
+```
+docker run --rm -p 8081:8081 --read-only pgweb-black --url postgres://...
+```
+
+Stamp the build with its commit, and cross-build for another architecture. A multi-platform build cannot be loaded into the local image store, so it goes straight to a registry; drop to one platform with `--load` to keep it local:
+
+```
+docker buildx build --platform linux/amd64,linux/arm64 \
+  --build-arg GIT_COMMIT=$(git rev-parse --short=8 HEAD) \
+  -t ghcr.io/blackkriger/pgweb-black:latest --push .
+```
+
 ## Usage
 
 ```
@@ -30,7 +61,27 @@ Or with individual flags:
 pgweb --host localhost --user myuser --db mydb
 ```
 
+A local socket works too:
+
+```
+pgweb --url "postgres:///database?host=/absolute/path/to/unix/socket/dir"
+```
+
 Inline editing issues `UPDATE` statements, so it needs a writable connection — running with `--readonly` (or a read-only bookmark) disables it.
+
+### Multiple database sessions
+
+To let several people connect to their own databases from one instance, start it with:
+
+```
+pgweb --sessions
+```
+
+Or set the environment variable:
+
+```
+PGWEB_SESSIONS=1 pgweb
+```
 
 ## Building
 
