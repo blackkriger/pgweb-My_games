@@ -21,6 +21,28 @@ func (client *Client) TableColumnsMeta(table string) (*Result, error) {
 	return client.query(statements.TableColumnsMeta, schema, name)
 }
 
+// castType drops the length modifier from a type: an explicit cast to varchar(5) truncates
+// silently, while assigning to the column raises "value too long".
+func castType(t string) string {
+	inQuote := false
+	for i := 0; i < len(t); i++ {
+		switch {
+		case t[i] == '"':
+			if inQuote && i+1 < len(t) && t[i+1] == '"' {
+				i++
+				continue
+			}
+			inQuote = !inQuote
+		case t[i] == '(' && !inQuote:
+			if j := strings.IndexByte(t[i:], ')'); j >= 0 {
+				return t[:i] + t[i+j+1:]
+			}
+			return t[:i]
+		}
+	}
+	return t
+}
+
 // parseColumnsMeta splits a TableColumnsMeta result into a column->type map and the ordered list of primary-key columns.
 func parseColumnsMeta(meta *Result) (map[string]string, []string) {
 	types := map[string]string{}
@@ -48,7 +70,7 @@ func buildPrimaryKeyMatch(types map[string]string, primaryKey []string, rowValue
 			return "", nil, fmt.Errorf("missing primary key value for column %q", col)
 		}
 		args = append(args, *val)
-		conds = append(conds, fmt.Sprintf(`%s = $%d::%s`, pgQuoteIdent(col), startIdx+i, types[col]))
+		conds = append(conds, fmt.Sprintf(`%s = $%d::%s`, pgQuoteIdent(col), startIdx+i, castType(types[col])))
 	}
 	return strings.Join(conds, " AND "), args, nil
 }
@@ -77,7 +99,7 @@ func (client *Client) UpdateTableRow(table string, opts UpdateRowOptions) (*Resu
 	setClause := fmt.Sprintf(`%s = NULL`, pgQuoteIdent(opts.Column))
 	if !opts.IsNull {
 		args = append(args, opts.Value)
-		setClause = fmt.Sprintf(`%s = $%d::%s`, pgQuoteIdent(opts.Column), len(args), types[opts.Column])
+		setClause = fmt.Sprintf(`%s = $%d::%s`, pgQuoteIdent(opts.Column), len(args), castType(types[opts.Column]))
 	}
 
 	where, whereArgs, err := buildPrimaryKeyMatch(types, primaryKey, opts.RowValues, len(args)+1)
